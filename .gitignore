@@ -136,3 +136,5 @@ logs/
 data/
 
 ingest_data_model/
+full_schema.json
+ingestdatamodel.avsc
