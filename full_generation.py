@@ -33,12 +33,12 @@ if os.path.exists(schema_dir):
         ret_val = subprocess.run(["git", "checkout", version], capture_output=True)
 else:
     ret_val = subprocess.run(["git", "clone", "--branch", version, data_model_url], capture_output=True)
+
 if ret_val.returncode == 0:
     #initialize json schema crawler
     crawler = schema_crawler.Crawler(schema_dir=schema_dir, output_dir=path)
     #initialize avro schema generator
     generator = generate_avro.AvroGenerator(version=version, json_file=json_file, avro_file=avro_file)
-
     #crawl the json schema and save it to file
     crawler.crawl()
     #generate the avro schema and csave it to file
