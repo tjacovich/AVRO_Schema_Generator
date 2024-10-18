@@ -138,3 +138,6 @@ data/
 ingest_data_model/
 full_schema.json
 ingestdatamodel.avsc
+storage_data_model_prototype/
+adsstorage_full_schema.json
+adsstoragemodel.avsc

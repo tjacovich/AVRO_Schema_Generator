@@ -2,10 +2,11 @@ import json
 import os
 
 class Crawler:
-    def __init__(self, schema_dir, output_dir, base_schema_file='Document.json'):
+    def __init__(self, schema_dir, output_dir, json_file='full_schema.json', base_schema_file='Document.json'):
         self.schema_dir = schema_dir
         self.output_dir = output_dir
         self.base_schema_name = base_schema_file
+        self.json_file = json_file
 
     def crawler(self, schema):
         for key in schema.keys():
@@ -31,5 +32,5 @@ class Crawler:
 
         self.crawler(base_schema)
 
-        with open(str(self.output_dir)+"/full_schema.json", "w") as f:
+        with open(str(self.json_file), "w") as f:
             json.dump(base_schema, f, indent=4)

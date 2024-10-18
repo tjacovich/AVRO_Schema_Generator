@@ -40,54 +40,58 @@ class AvroGenerator:
 
     def step_through_schema(self, avro_schema, ingest_schema, properties, required, namespace):
         for field_property in properties:
-            #assign schema to variable
-            property_schema = ingest_schema["properties"].get(field_property)
-            
-            #initialize additional variables for namespace and keys list
-            property_keys = list(property_schema.keys())
-            #get list of required keys
-            required_property = property_schema.get("required", [""])
-            temp_namespace = str(namespace)+"."+str(field_property)
-            temp_dict = {}
-            temp_dict["name"] = field_property
-            temp_dict["type"] = []
+            if field_property not in ['$comment']:
+                #assign schema to variable
+                property_schema = ingest_schema["properties"].get(field_property)
+                
+                #initialize additional variables for namespace and keys list
+                try:
+                    property_keys = list(property_schema.keys())
+                except:
+                    print("Warning. No keys for: {}".format(field_property))
+                #get list of required keys
+                required_property = property_schema.get("required", [""])
+                temp_namespace = str(namespace)+"."+str(field_property)
+                temp_dict = {}
+                temp_dict["name"] = field_property
+                temp_dict["type"] = []
 
-            #make field nullable if not required
-            if field_property not in required: 
-                temp_dict["type"].append("null")
+                #make field nullable if not required
+                if field_property not in required: 
+                    temp_dict["type"].append("null")
 
-            #If properties is a key, this means we have a record type object and need to crawl it first
-            if "properties" in property_keys:
-                type_dict = {"type":"record", "name":str(field_property)+"Record"}     
-                temp_dict["namespace"] = temp_namespace
+                #If properties is a key, this means we have a record type object and need to crawl it first
+                if "properties" in property_keys:
+                    type_dict = {"type":"record", "name":str(field_property)+"Record"}     
+                    temp_dict["namespace"] = temp_namespace
 
-                type_dict["fields"] = []
-                self.step_through_schema(type_dict, property_schema, property_schema["properties"].keys(), required_property,  temp_namespace)
-                temp_dict["type"].append(type_dict)
-            
-            #If this is an enum we need to change the structure slightly from the json schema
-            elif "enum" in property_keys:
-                temp_dict["type"].append({"type": "enum", "name": str(field_property)+"Enum", "symbols": property_schema.get("enum")})
-            
-            #items are complicated to handle
-            elif "items" in property_keys:
-                temp_dict["type"].append(self.generate_item_dict(property_schema, field_property,  temp_namespace))
+                    type_dict["fields"] = []
+                    self.step_through_schema(type_dict, property_schema, property_schema["properties"].keys(), required_property,  temp_namespace)
+                    temp_dict["type"].append(type_dict)
+                
+                #If this is an enum we need to change the structure slightly from the json schema
+                elif "enum" in property_keys:
+                    temp_dict["type"].append({"type": "enum", "name": str(field_property)+"Enum", "symbols": property_schema.get("enum")})
+                
+                #items are complicated to handle
+                elif "items" in property_keys:
+                    temp_dict["type"].append(self.generate_item_dict(property_schema, field_property,  temp_namespace))
 
-            #We can just assign directly otherwise
-            else:
-                temp_dict["type"].append(property_schema.get("type"))
+                #We can just assign directly otherwise
+                else:
+                    temp_dict["type"].append(property_schema.get("type"))
 
-            #Assign descriptions to docs
-            if "description" in property_keys:
-                temp_dict["doc"] = property_schema.get("description")
-            
-            #assign comments to metadata keys
-            if "$comment" in property_keys:
-                temp_dict["$comment"] = property_schema.get("$comment")
-            if "$comments" in property_keys:
-                temp_dict["$comments"] = property_schema.get("$comments")
+                #Assign descriptions to docs
+                if "description" in property_keys:
+                    temp_dict["doc"] = property_schema.get("description")
+                
+                #assign comments to metadata keys
+                if "$comment" in property_keys:
+                    temp_dict["$comment"] = property_schema.get("$comment")
+                if "$comments" in property_keys:
+                    temp_dict["$comments"] = property_schema.get("$comments")
 
-            avro_schema["fields"].append(temp_dict)
+                avro_schema["fields"].append(temp_dict)
     
     def generate(self):
         #initialize schema dict
